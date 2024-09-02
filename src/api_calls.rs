@@ -6,9 +6,9 @@ const LOGIN_URL: &str = "https://ccp.netcup.net/run/webservice/servers/endpoint.
 
 #[derive(Deserialize)]
 pub struct ApiLogin {
-    customer_number: u32,
-    api_key: String,
-    api_password: String,
+    pub customer_number: i32,
+    pub api_key: String,
+    pub api_password: String,
 }
 
 pub struct ApiAuth {
@@ -31,14 +31,14 @@ pub enum RecordType {
 
 #[derive(Deserialize)]
 pub struct ResponseMessage {
-    serverrequestedid: String,
-    clientrequestedid: String,
-    action: String,
-    status: String,
-    statuscode: u16,
-    shortmessage: String,
-    longmessage: String,
-    responsedate: String,
+    pub serverrequestid: String,
+    pub clientrequestid: String,
+    pub action: String,
+    pub status: String,
+    pub statuscode: u16,
+    pub shortmessage: String,
+    pub longmessage: String,
+    pub responsedata: String,
 }
 
 pub struct DnsRecord {
