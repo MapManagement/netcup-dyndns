@@ -3,14 +3,14 @@ use std::collections::HashMap;
 
 const LOGIN_URL: &str = "https://ccp.netcup.net/run/webservice/servers/endpoint.php?JSON";
 
-#[derive(Deserialize, Serialize)]
+#[derive(Debug, Deserialize, Serialize)]
 pub struct CredentialsFile {
     pub customernumber: i32,
     pub apikey: String,
     pub apipassword: String,
 }
 
-#[derive(Serialize)]
+#[derive(Debug, Serialize)]
 pub struct ApiRequest {
     pub action: String,
     pub param: CredentialsFile,
@@ -37,15 +37,38 @@ pub enum RecordType {
 
 #[derive(Deserialize)]
 #[allow(dead_code)]
+pub struct ResponseData {
+    pub apisessionid: String,
+}
+
+#[derive(Deserialize)]
+#[allow(dead_code)]
 pub struct ResponseMessage {
     pub serverrequestid: String,
     pub clientrequestid: String,
     pub action: String,
     pub status: String,
-    pub statuscode: u16,
+    pub statuscode: i32,
     pub shortmessage: String,
     pub longmessage: String,
-    pub responsedata: String,
+    pub responsedata: ResponseData,
+}
+
+impl Default for ResponseMessage {
+    fn default() -> ResponseMessage {
+        ResponseMessage {
+            serverrequestid: "default".to_string(),
+            clientrequestid: "default".to_string(),
+            action: "default".to_string(),
+            status: "default".to_string(),
+            statuscode: 0,
+            shortmessage: "default".to_string(),
+            longmessage: "default".to_string(),
+            responsedata: ResponseData {
+                apisessionid: "default".to_string(),
+            },
+        }
+    }
 }
 
 pub struct DnsRecord {
@@ -72,7 +95,7 @@ pub async fn create_login_session(
     api_login: CredentialsFile,
 ) -> Result<ResponseMessage, reqwest::Error> {
     let login_request = ApiRequest {
-        action: "param".to_string(),
+        action: "login".to_string(),
         param: api_login,
     };
 

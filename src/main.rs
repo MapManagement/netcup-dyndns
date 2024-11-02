@@ -12,7 +12,7 @@ async fn main() {
     let response = create_login_session(config).await;
 
     match response {
-        Ok(..) => println!("yes"),
+        Ok(res) => println!("{:?}", res.statuscode),
         Err(error) => println!("{}", error),
     };
 }
