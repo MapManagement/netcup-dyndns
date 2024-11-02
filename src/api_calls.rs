@@ -1,14 +1,19 @@
-use std::collections::HashMap;
-
 use serde::{Deserialize, Serialize};
+use std::collections::HashMap;
 
 const LOGIN_URL: &str = "https://ccp.netcup.net/run/webservice/servers/endpoint.php?JSON";
 
-#[derive(Deserialize)]
-pub struct ApiLogin {
-    pub customer_number: i32,
-    pub api_key: String,
-    pub api_password: String,
+#[derive(Deserialize, Serialize)]
+pub struct CredentialsFile {
+    pub customernumber: i32,
+    pub apikey: String,
+    pub apipassword: String,
+}
+
+#[derive(Serialize)]
+pub struct ApiRequest {
+    pub action: String,
+    pub param: CredentialsFile,
 }
 
 pub struct ApiAuth {
@@ -18,6 +23,7 @@ pub struct ApiAuth {
     session_id: String,
 }
 
+#[allow(nonstandard_style)]
 pub enum RecordType {
     A,
     AAAA,
@@ -30,6 +36,7 @@ pub enum RecordType {
 }
 
 #[derive(Deserialize)]
+#[allow(dead_code)]
 pub struct ResponseMessage {
     pub serverrequestid: String,
     pub clientrequestid: String,
@@ -61,16 +68,18 @@ pub struct DnsZone {
     enable_dnsssec: bool,
 }
 
-pub async fn create_login_session(api_login: ApiLogin) -> Result<ResponseMessage, reqwest::Error> {
-    let mut json_map = HashMap::new();
-    json_map.insert("customernumber", api_login.customer_number.to_string());
-    json_map.insert("apikey", api_login.api_key.to_string());
-    json_map.insert("apipassword", api_login.api_password.to_string());
+pub async fn create_login_session(
+    api_login: CredentialsFile,
+) -> Result<ResponseMessage, reqwest::Error> {
+    let login_request = ApiRequest {
+        action: "param".to_string(),
+        param: api_login,
+    };
 
     let client = reqwest::Client::new();
-    let repsonse = client.post(LOGIN_URL).json(&json_map).send().await;
+    let response = client.post(LOGIN_URL).json(&login_request).send().await;
 
-    match repsonse {
+    match response {
         Ok(res) => res.json::<ResponseMessage>().await,
         Err(error) => Err(error),
     }
