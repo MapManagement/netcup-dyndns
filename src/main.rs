@@ -1,8 +1,10 @@
 use std::fs;
 
-use api_calls::{create_login_session, CredentialsFile};
+use api_calls::create_login_session;
+use api_objects::CredentialsFile;
 
 mod api_calls;
+mod api_objects;
 
 const CONFIG_FILE: &str = "example.toml";
 
@@ -13,7 +15,7 @@ async fn main() {
 
     match response {
         Ok(res) => println!("{:?}", res.statuscode),
-        Err(error) => println!("{}", error),
+        Err(status_code) => println!("Status Code: {}", status_code),
     };
 }
 
