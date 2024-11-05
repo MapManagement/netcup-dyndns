@@ -13,6 +13,29 @@ pub struct ApiRequest {
     pub param: CredentialsFile,
 }
 
+#[derive(Debug, Serialize)]
+pub struct InfoDomainRequest {
+    pub domainname: String,
+    pub customernumber: i32,
+    pub apikey: String,
+    pub apisessionid: String,
+    pub clientrequestid: Option<String>,
+    pub registryinformationflag: Option<bool>,
+}
+
+#[derive(Debug, Deserialize)]
+#[allow(dead_code)]
+pub struct ResponseInfoDomain {
+    pub serverrequestid: String,
+    pub clientrequestid: String,
+    pub action: String,
+    pub status: String,
+    pub statuscode: i32,
+    pub shortmessage: String,
+    pub longmessage: String,
+    pub responsedata: String,
+}
+
 pub struct ApiAuth {
     domain: String,
     customernumber: u32,
