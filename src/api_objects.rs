@@ -1,16 +1,11 @@
 use serde::{Deserialize, Serialize};
 
-#[derive(Debug, Deserialize, Serialize)]
-pub struct CredentialsFile {
-    pub customernumber: i32,
-    pub apikey: String,
-    pub apipassword: String,
-}
+use crate::configuration::Credentials;
 
 #[derive(Debug, Serialize)]
 pub struct ApiRequest {
     pub action: String,
-    pub param: CredentialsFile,
+    pub param: Credentials,
 }
 
 #[derive(Debug, Serialize)]
