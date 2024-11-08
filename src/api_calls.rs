@@ -5,7 +5,7 @@ const API_URL: &str = "https://ccp.netcup.net/run/webservice/servers/endpoint.ph
 const SUCCESS_STATUS_CODE: i32 = 2000;
 const LOGIN_ACTION: &str = "login";
 
-pub async fn create_login_session(api_login: &Credentials) -> Result<ResponseMessage, i32> {
+pub async fn create_login_session(api_login: &Credentials) -> Result<LoginResponse, i32> {
     let login_request = ApiRequest {
         action: LOGIN_ACTION.to_string(),
         param: Credentials {
@@ -22,7 +22,7 @@ pub async fn create_login_session(api_login: &Credentials) -> Result<ResponseMes
         .send()
         .await
         .expect("Couldn't log into Netcup API.")
-        .json::<ResponseMessage>()
+        .json::<LoginResponse>()
         .await
         .expect("Couldn't parse response of Netcup API.");
 
@@ -37,7 +37,7 @@ pub async fn get_domain_info(
     session_id: String,
     domain: String,
     credentials: &Credentials,
-) -> Result<ResponseInfoDomain, i32> {
+) -> Result<InfoDomainResponse, i32> {
     let domain_info_request = InfoDomainRequest {
         domainname: domain,
         customernumber: credentials.customernumber,
@@ -56,7 +56,7 @@ pub async fn get_domain_info(
         .send()
         .await
         .expect("Couldn't retrieve data from Netcup API.")
-        .json::<ResponseInfoDomain>()
+        .json::<InfoDomainResponse>()
         .await
         .expect("Couldn't parse response of Netcup API.");
 
@@ -71,10 +71,10 @@ pub async fn get_domain_info(
 
 // ==== update information ====
 
-pub async fn update_dns_records(auth: ApiAuth) {}
+pub async fn update_dns_records() {}
 
-pub async fn update_dns_zone(auth: ApiAuth) {}
+pub async fn update_dns_zone() {}
 
-pub async fn update_domain(auth: ApiAuth) {}
+pub async fn update_domain() {}
 
-pub async fn update_handle(auth: ApiAuth) {}
+pub async fn update_handle() {}

@@ -20,7 +20,7 @@ pub struct InfoDomainRequest {
 
 #[derive(Debug, Deserialize)]
 #[allow(dead_code)]
-pub struct ResponseInfoDomain {
+pub struct InfoDomainResponse {
     pub serverrequestid: String,
     pub clientrequestid: String,
     pub action: String,
@@ -31,34 +31,9 @@ pub struct ResponseInfoDomain {
     pub responsedata: String,
 }
 
-pub struct ApiAuth {
-    domain: String,
-    customernumber: u32,
-    api_key: String,
-    session_id: String,
-}
-
-#[allow(nonstandard_style)]
-pub enum RecordType {
-    A,
-    AAAA,
-    MX,
-    CNAME,
-    TXT,
-    NS,
-    SOA,
-    SRV,
-}
-
 #[derive(Deserialize)]
 #[allow(dead_code)]
-pub struct ResponseData {
-    pub apisessionid: String,
-}
-
-#[derive(Deserialize)]
-#[allow(dead_code)]
-pub struct ResponseMessage {
+pub struct LoginResponse {
     pub serverrequestid: String,
     pub clientrequestid: String,
     pub action: String,
@@ -69,9 +44,15 @@ pub struct ResponseMessage {
     pub responsedata: ResponseData,
 }
 
-impl Default for ResponseMessage {
-    fn default() -> ResponseMessage {
-        ResponseMessage {
+#[derive(Deserialize)]
+#[allow(dead_code)]
+pub struct ResponseData {
+    pub apisessionid: String,
+}
+
+impl Default for LoginResponse {
+    fn default() -> LoginResponse {
+        LoginResponse {
             serverrequestid: "default".to_string(),
             clientrequestid: "default".to_string(),
             action: "default".to_string(),
@@ -84,6 +65,18 @@ impl Default for ResponseMessage {
             },
         }
     }
+}
+
+#[allow(nonstandard_style)]
+pub enum RecordType {
+    A,
+    AAAA,
+    MX,
+    CNAME,
+    TXT,
+    NS,
+    SOA,
+    SRV,
 }
 
 pub struct DnsRecord {
