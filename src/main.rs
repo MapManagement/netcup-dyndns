@@ -1,6 +1,6 @@
 use std::fs;
 
-use api_calls::{create_login_session, get_domain_info};
+use api_calls::{create_login_session, get_domain_info, update_dns_records};
 use configuration::Configuration;
 
 mod api_calls;
@@ -18,18 +18,30 @@ async fn main() {
     match response {
         Ok(res) => {
             for (_, domain) in config.domains.into_iter() {
-                let domain_repsonse = get_domain_info(
+                /*let domain_repsonse = get_domain_info(
                     res.responsedata.apisessionid.to_owned(),
                     domain.domain_name.to_string(),
                     &api_credentials,
                 )
+                .await;*/
+
+                if domain.dns_records.is_none() {
+                    continue;
+                }
+
+                let update_dns_records_response = update_dns_records(
+                    res.responsedata.apisessionid.to_owned(),
+                    domain.domain_name.to_string(),
+                    &api_credentials,
+                    domain.dns_records.unwrap(),
+                )
                 .await;
 
-                if domain_repsonse.is_ok() {
-                    let ok_domain = domain_repsonse.unwrap();
-                    println!("{:?}", ok_domain.statuscode);
+                if update_dns_records_response.is_ok() {
+                    let ok_update = update_dns_records_response.unwrap();
+                    println!("{:?}", ok_update.statuscode);
                 } else {
-                    let error_code = domain_repsonse.unwrap_err();
+                    let error_code = update_dns_records_response.unwrap_err();
                     println!("{:?}", error_code);
                 }
             }

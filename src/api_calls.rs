@@ -1,6 +1,7 @@
 use crate::api_objects::*;
-use crate::configuration;
 use crate::configuration::*;
+
+use std::collections::HashMap;
 
 const API_URL: &str = "https://ccp.netcup.net/run/webservice/servers/endpoint.php?JSON";
 const SUCCESS_STATUS_CODE: i32 = 2000;
@@ -49,8 +50,6 @@ pub async fn get_domain_info(
         registryinformationflag: None,
     };
 
-    println!("{:?}", domain_info_request);
-
     let client = reqwest::Client::new();
     let response = client
         .post(API_URL)
@@ -73,7 +72,43 @@ pub async fn get_domain_info(
 
 // ==== update information ====
 
-pub async fn update_dns_records(session_id: String, configuration: &Configuration) {}
+pub async fn update_dns_records(
+    session_id: String,
+    domain: String,
+    credentials: &Credentials,
+    dns_records: HashMap<String, DnsRecord>,
+) -> Result<UpdateDnsRecordsResponse, i32> {
+    let vec_dns_records: Vec<DnsRecord> = dns_records.into_values().collect();
+    let update_dns_records_request = UpdateDnsRecordsRequest {
+        domainname: domain,
+        customernumber: credentials.customernumber,
+        apikey: credentials.apikey.to_owned(),
+        apisessionid: session_id,
+        clientrequestid: None,
+        dnsrecordset: DnsRecordSet {
+            dnsrecords: vec_dns_records,
+        },
+    };
+
+    let client = reqwest::Client::new();
+    let response = client
+        .post(API_URL)
+        .json(&update_dns_records_request)
+        .send()
+        .await
+        .expect("Couldn't retrieve data from Netcup API.")
+        .json::<UpdateDnsRecordsResponse>()
+        .await
+        .expect("Couldn't parse response of Netcup API.");
+
+    match response.statuscode {
+        SUCCESS_STATUS_CODE => Ok(response),
+        _ => {
+            println!("{:?}", response.longmessage);
+            Err(response.statuscode)
+        }
+    }
+}
 
 pub async fn update_dns_zone() {}
 
