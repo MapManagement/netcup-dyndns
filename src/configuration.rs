@@ -2,6 +2,8 @@ use std::collections::HashMap;
 
 use serde::{Deserialize, Serialize};
 
+use crate::api_objects::DnsRecord;
+
 #[derive(Debug, Deserialize, Serialize)]
 pub struct Configuration {
     pub credentials: Credentials,
@@ -18,4 +20,5 @@ pub struct Credentials {
 #[derive(Debug, Deserialize, Serialize)]
 pub struct Domain {
     pub domain_name: String,
+    pub dns_records: Option<HashMap<String, DnsRecord>>,
 }

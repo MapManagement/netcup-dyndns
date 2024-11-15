@@ -30,7 +30,7 @@ async fn main() {
                     println!("{:?}", ok_domain.statuscode);
                 } else {
                     let error_code = domain_repsonse.unwrap_err();
-                    println!("{}", error_code);
+                    println!("{:?}", error_code);
                 }
             }
         }

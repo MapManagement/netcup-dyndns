@@ -1,4 +1,5 @@
 use crate::api_objects::*;
+use crate::configuration;
 use crate::configuration::*;
 
 const API_URL: &str = "https://ccp.netcup.net/run/webservice/servers/endpoint.php?JSON";
@@ -6,7 +7,7 @@ const SUCCESS_STATUS_CODE: i32 = 2000;
 const LOGIN_ACTION: &str = "login";
 
 pub async fn create_login_session(api_login: &Credentials) -> Result<LoginResponse, i32> {
-    let login_request = ApiRequest {
+    let login_request = LoginRequest {
         action: LOGIN_ACTION.to_string(),
         param: Credentials {
             customernumber: api_login.customernumber,
@@ -33,6 +34,7 @@ pub async fn create_login_session(api_login: &Credentials) -> Result<LoginRespon
 }
 // ==== read information ====
 
+/// Only available for domain resellers
 pub async fn get_domain_info(
     session_id: String,
     domain: String,
@@ -71,7 +73,7 @@ pub async fn get_domain_info(
 
 // ==== update information ====
 
-pub async fn update_dns_records() {}
+pub async fn update_dns_records(session_id: String, configuration: &Configuration) {}
 
 pub async fn update_dns_zone() {}
 

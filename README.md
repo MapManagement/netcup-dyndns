@@ -6,7 +6,20 @@ DynDNS service for netcup nameservers
 
 ```toml
 # example.toml
-customernumber = 1234
-apikey = "key"
-apipassword = "password"
+[credentials]
+customernumber = 123456
+apikey = "apikey"
+apipassword = "apipassword"
+
+[domains]
+    [domains.first]
+    domain_name = "first.domain"
+    [domains.first.dns_records]
+        [domains.first.dns_records.test]
+        hostname = "test"
+        dns_type = "A"
+        destination = "1.2.3.4"
+
+    [domains.second]
+    domain_name = "second.domain"
 ```
