@@ -5,10 +5,13 @@ use std::collections::HashMap;
 
 const API_URL: &str = "https://ccp.netcup.net/run/webservice/servers/endpoint.php?JSON";
 const SUCCESS_STATUS_CODE: i32 = 2000;
+
 const LOGIN_ACTION: &str = "login";
+const INFO_DOMAIN_ACTION: &str = "infoDomain";
+const UPDATE_DNS_RECORDS_ACTION: &str = "updateDnsRecords";
 
 pub async fn create_login_session(api_login: &Credentials) -> Result<LoginResponse, i32> {
-    let login_request = LoginRequest {
+    let login_request = LoginRequestFrame {
         action: LOGIN_ACTION.to_string(),
         param: Credentials {
             customernumber: api_login.customernumber,
@@ -50,10 +53,15 @@ pub async fn get_domain_info(
         registryinformationflag: None,
     };
 
+    let request_frame = InfoDomainRequestFrame {
+        action: INFO_DOMAIN_ACTION.to_string(),
+        param: domain_info_request,
+    };
+
     let client = reqwest::Client::new();
     let response = client
         .post(API_URL)
-        .json(&domain_info_request)
+        .json(&request_frame)
         .send()
         .await
         .expect("Couldn't retrieve data from Netcup API.")
@@ -79,6 +87,7 @@ pub async fn update_dns_records(
     dns_records: HashMap<String, DnsRecord>,
 ) -> Result<UpdateDnsRecordsResponse, i32> {
     let vec_dns_records: Vec<DnsRecord> = dns_records.into_values().collect();
+
     let update_dns_records_request = UpdateDnsRecordsRequest {
         domainname: domain,
         customernumber: credentials.customernumber,
@@ -90,10 +99,15 @@ pub async fn update_dns_records(
         },
     };
 
+    let request_frame = UpdateDnsRecordsRequestFrame {
+        action: UPDATE_DNS_RECORDS_ACTION.to_string(),
+        param: update_dns_records_request,
+    };
+
     let client = reqwest::Client::new();
     let response = client
         .post(API_URL)
-        .json(&update_dns_records_request)
+        .json(&request_frame)
         .send()
         .await
         .expect("Couldn't retrieve data from Netcup API.")

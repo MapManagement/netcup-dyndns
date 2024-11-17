@@ -3,7 +3,7 @@ use serde::{Deserialize, Serialize};
 use crate::configuration::Credentials;
 
 #[derive(Debug, Serialize)]
-pub struct LoginRequest {
+pub struct LoginRequestFrame {
     pub action: String,
     pub param: Credentials,
 }
@@ -18,7 +18,7 @@ pub struct LoginResponse {
     pub statuscode: i32,
     pub shortmessage: String,
     pub longmessage: String,
-    pub responsedata: ResponseData,
+    pub responsedata: LoginResponseData,
 }
 
 impl Default for LoginResponse {
@@ -31,7 +31,7 @@ impl Default for LoginResponse {
             statuscode: 0,
             shortmessage: "default".to_string(),
             longmessage: "default".to_string(),
-            responsedata: ResponseData {
+            responsedata: LoginResponseData {
                 apisessionid: "default".to_string(),
             },
         }
@@ -40,8 +40,14 @@ impl Default for LoginResponse {
 
 #[derive(Deserialize)]
 #[allow(dead_code)]
-pub struct ResponseData {
+pub struct LoginResponseData {
     pub apisessionid: String,
+}
+
+#[derive(Debug, Serialize)]
+pub struct InfoDomainRequestFrame {
+    pub action: String,
+    pub param: InfoDomainRequest,
 }
 
 #[derive(Debug, Serialize)]
@@ -68,6 +74,12 @@ pub struct InfoDomainResponse {
 }
 
 #[derive(Debug, Serialize)]
+pub struct UpdateDnsRecordsRequestFrame {
+    pub action: String,
+    pub param: UpdateDnsRecordsRequest,
+}
+
+#[derive(Debug, Serialize)]
 pub struct UpdateDnsRecordsRequest {
     pub domainname: String,
     pub customernumber: i32,
@@ -81,13 +93,19 @@ pub struct UpdateDnsRecordsRequest {
 #[allow(dead_code)]
 pub struct UpdateDnsRecordsResponse {
     pub serverrequestid: String,
-    pub clientrequestid: String,
+    pub clientrequestid: Option<String>,
     pub action: String,
     pub status: String,
     pub statuscode: i32,
     pub shortmessage: String,
-    pub longmessage: String,
-    pub responsedata: String,
+    pub longmessage: Option<String>,
+    pub responsedata: Option<UpdateDnsRecordsResponseData>,
+}
+
+#[derive(Debug, Deserialize)]
+#[allow(dead_code)]
+pub struct UpdateDnsRecordsResponseData {
+    pub dnsrecords: Vec<DnsRecord>,
 }
 
 #[derive(Debug, Serialize)]
@@ -97,8 +115,9 @@ pub struct DnsRecordSet {
 
 #[derive(Debug, Deserialize, Serialize)]
 pub struct DnsRecord {
-    id: Option<i32>,
+    id: Option<String>,
     hostname: String,
+    #[serde(rename(serialize = "type", deserialize = "type"))]
     dns_type: RecordType,
     priority: Option<String>,
     destination: String,
