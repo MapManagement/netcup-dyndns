@@ -1,17 +1,12 @@
 use std::{fs, path::PathBuf};
 
 use api_calls::{create_login_session, get_domain_info, update_dns_records};
-use clap::{arg, command, value_parser, Arg, ArgAction, Command, Parser};
+use clap::{arg, command, Parser};
 use configuration::Configuration;
 
 mod api_calls;
 mod api_objects;
 mod configuration;
-
-const CONFIG_ARG: &str = "config";
-const TEST_ARG: &str = "test";
-const VERBOSE_ARG: &str = "verbose";
-const INFO_ARG: &str = "info";
 
 #[derive(Parser, Debug)]
 #[command(version, about, long_about = None)]
@@ -39,22 +34,28 @@ async fn main() {
 
     match tried_args {
         Ok(args) => {
+            verbose_print("Parsing configuration file...", args.verbose);
+
             let config = read_config(args.config);
+            verbose_print("Parsed configuration file", args.verbose);
 
             // currently precedence over info arg
             if args.test {
+                verbose_print("Entering test branch", args.verbose);
                 test_branch_command(config, args.verbose);
                 return;
             }
 
             if args.info {
+                verbose_print("Entering info branch", args.verbose);
                 info_branch_command(config, args.verbose).await;
                 return;
             }
 
+            verbose_print("Entering default branch", args.verbose);
             default_branch_command(config, args.verbose).await;
         }
-        Err(error) => {
+        Err(_) => {
             println!("Missing config argument");
         }
     }
@@ -62,15 +63,22 @@ async fn main() {
 
 async fn default_branch_command(config: Configuration, verbose: bool) {
     let api_credentials = config.credentials.clone();
+    verbose_print("Retrieving login session to for netcup API...", verbose);
     let response = create_login_session(&config.credentials).await;
+    verbose_print("Retrieved login session to for netcup API", verbose);
 
     match response {
         Ok(res) => {
+            verbose_print("Updating DNS records...", verbose);
             for (_, domain) in config.domains.into_iter() {
                 if domain.dns_records.is_none() {
                     continue;
                 }
 
+                verbose_print(
+                    format!("Updating '{}'...", domain.domain_name).as_str(),
+                    verbose,
+                );
                 let update_dns_records_response = update_dns_records(
                     res.responsedata.apisessionid.to_owned(),
                     domain.domain_name.to_string(),
@@ -80,15 +88,25 @@ async fn default_branch_command(config: Configuration, verbose: bool) {
                 .await;
 
                 if update_dns_records_response.is_ok() {
-                    let ok_update = update_dns_records_response.unwrap();
-                    println!("{:?}", ok_update.statuscode);
+                    verbose_print(
+                        format!("Updated '{}'", domain.domain_name).as_str(),
+                        verbose,
+                    );
                 } else {
                     let error_code = update_dns_records_response.unwrap_err();
-                    println!("{:?}", error_code);
+                    verbose_print(
+                        format!("Couldn't update '{}'", domain.domain_name).as_str(),
+                        verbose,
+                    );
+                    verbose_print(format!("Error: '{}'", error_code).as_str(), verbose);
                 }
             }
+            verbose_print("Updated DNS records", verbose);
         }
-        Err(status_code) => println!("Status Code: {}", status_code),
+        Err(status_code) => {
+            verbose_print("Couldn't connect to netcup API", verbose);
+            verbose_print(format!("Error: '{}'", status_code).as_str(), verbose);
+        }
     };
 }
 
@@ -102,4 +120,12 @@ fn read_config(config_file: PathBuf) -> Configuration {
     let file_content = fs::read_to_string(config_file).unwrap();
 
     toml::from_str(&file_content).unwrap()
+}
+
+fn verbose_print(text: &str, verbose: bool) {
+    if !verbose {
+        return;
+    }
+
+    println!("{}", text);
 }
