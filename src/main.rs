@@ -1,7 +1,7 @@
 use std::{fs, path::PathBuf};
 
 use api_calls::{create_login_session, get_domain_info, update_dns_records};
-use clap::{arg, command, value_parser, Arg, ArgAction, Command};
+use clap::{arg, command, value_parser, Arg, ArgAction, Command, Parser};
 use configuration::Configuration;
 
 mod api_calls;
@@ -13,61 +13,51 @@ const TEST_ARG: &str = "test";
 const VERBOSE_ARG: &str = "verbose";
 const INFO_ARG: &str = "info";
 
+#[derive(Parser, Debug)]
+#[command(version, about, long_about = None)]
+struct Args {
+    /// Specify the file to read the domain configuration from
+    #[arg(short, long)]
+    config: PathBuf,
+
+    /// Verifies whether the specified configuration file is formatted correctly
+    #[arg(short, long, required = false, num_args = 0)]
+    test: bool,
+
+    /// Prints more detailed information about API calls and errors
+    #[arg(short, long, required = false, num_args = 0)]
+    verbose: bool,
+
+    /// Retrieves information about the specified domains and prints it in a readable format
+    #[arg(short, long, required = false, num_args = 0)]
+    info: bool,
+}
+
 #[tokio::main]
 async fn main() {
-    let command_matches = command!()
-        .arg(Arg::new(CONFIG_ARG)
-                .short('c')
-                .long(CONFIG_ARG)
-                .required(true)
-                .num_args(1)
-                .value_parser(value_parser!(PathBuf))
-                .help("Specify the file to read the domain configuration from")
-        )
-        .arg(
-            Arg::new(TEST_ARG)
-                .short('t')
-                .long(TEST_ARG)
-                .required(false)
-                .num_args(0)
-                .help("Verifies whether the specified configuration file is formatted correctly"),
-        )
-        .arg(
-            Arg::new(VERBOSE_ARG)
-                .short('v')
-                .long(VERBOSE_ARG)
-                .required(false)
-                .num_args(0)
-                .help("Prints more detailed information about API calls and errors."),
-        )
-        .arg(
-            Arg::new(INFO_ARG)
-                .short('i')
-                .long(INFO_ARG)
-                .required(false)
-                .num_args(0)
-                .help("Retrieves information about the specified domains and prints it in a readable format."),
-        ).get_matches();
+    let tried_args = Args::try_parse();
 
-    if let Some(config_file) = command_matches.get_one::<PathBuf>(CONFIG_ARG) {
-        let config = read_config(config_file.to_path_buf());
-        let verbose_flag = command_matches.contains_id(VERBOSE_ARG);
+    match tried_args {
+        Ok(args) => {
+            let config = read_config(args.config);
 
-        // currently precedence over info arg
-        if command_matches.contains_id(TEST_ARG) {
-            test_branch_command(config, verbose_flag);
-            return;
+            // currently precedence over info arg
+            if args.test {
+                test_branch_command(config, args.verbose);
+                return;
+            }
+
+            if args.info {
+                info_branch_command(config, args.verbose).await;
+                return;
+            }
+
+            default_branch_command(config, args.verbose).await;
         }
-
-        if command_matches.contains_id(INFO_ARG) {
-            info_branch_command(config, verbose_flag).await;
-            return;
+        Err(error) => {
+            println!("Missing config argument");
         }
-
-        default_branch_command(config, verbose_flag).await;
     }
-
-    println!("Missing config argument");
 }
 
 async fn default_branch_command(config: Configuration, verbose: bool) {
