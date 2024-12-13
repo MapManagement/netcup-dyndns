@@ -3,11 +3,13 @@ use std::{fs, path::PathBuf};
 use api_calls::{create_login_session, get_domain_info, info_dns_records, update_dns_records};
 use clap::{arg, command, Parser};
 use configuration::Configuration;
+use domain_utils::ApiConnection;
 use serde_json;
 
 mod api_calls;
 mod api_objects;
 mod configuration;
+mod domain_utils;
 
 #[derive(Parser, Debug)]
 #[command(version, about, long_about = None)]
@@ -63,52 +65,17 @@ async fn main() {
 }
 
 async fn default_branch_command(config: Configuration, verbose: bool) {
-    let api_credentials = config.credentials.clone();
+    let mut api_connection = ApiConnection {
+        configuration: config,
+        session_id: None,
+    };
     verbose_print("Retrieving login session to for netcup API...", verbose);
-    let response = create_login_session(&config.credentials).await;
+
+    api_connection.login().await;
+
     verbose_print("Retrieved login session to for netcup API", verbose);
 
-    match response {
-        Ok(res) => {
-            verbose_print("Updating DNS records...", verbose);
-            for (_, domain) in config.domains.into_iter() {
-                if domain.dns_records.is_none() {
-                    continue;
-                }
-
-                verbose_print(
-                    format!("Updating '{}'...", domain.domain_name).as_str(),
-                    verbose,
-                );
-                let update_dns_records_response = update_dns_records(
-                    res.responsedata.apisessionid.to_owned(),
-                    domain.domain_name.to_string(),
-                    &api_credentials,
-                    domain.dns_records.unwrap(),
-                )
-                .await;
-
-                if update_dns_records_response.is_ok() {
-                    verbose_print(
-                        format!("Updated '{}'", domain.domain_name).as_str(),
-                        verbose,
-                    );
-                } else {
-                    let error_code = update_dns_records_response.unwrap_err();
-                    verbose_print(
-                        format!("Couldn't update '{}'", domain.domain_name).as_str(),
-                        verbose,
-                    );
-                    verbose_print(format!("Error: '{}'", error_code).as_str(), verbose);
-                }
-            }
-            verbose_print("Updated DNS records", verbose);
-        }
-        Err(status_code) => {
-            verbose_print("Couldn't connect to netcup API", verbose);
-            verbose_print(format!("Error: '{}'", status_code).as_str(), verbose);
-        }
-    };
+    api_connection.update_dns_records(verbose).await;
 }
 
 #[allow(dead_code)]
@@ -116,57 +83,17 @@ fn test_branch_command(config: Configuration, verbose: bool) {}
 
 #[allow(dead_code)]
 async fn info_branch_command(config: Configuration, verbose: bool) {
-    let api_credentials = config.credentials.clone();
+    let mut api_connection = ApiConnection {
+        configuration: config,
+        session_id: None,
+    };
     verbose_print("Retrieving login session to for netcup API...", verbose);
-    let response = create_login_session(&config.credentials).await;
+
+    api_connection.login().await;
+
     verbose_print("Retrieved login session to for netcup API", verbose);
 
-    match response {
-        Ok(res) => {
-            verbose_print("Retrieving DNS records...", verbose);
-            for (_, domain) in config.domains.into_iter() {
-                if domain.dns_records.is_none() {
-                    continue;
-                }
-
-                verbose_print(
-                    format!("Retrieving '{}'...", domain.domain_name).as_str(),
-                    verbose,
-                );
-                let info_dns_records_response = info_dns_records(
-                    res.responsedata.apisessionid.to_owned(),
-                    domain.domain_name.to_string(),
-                    &api_credentials,
-                )
-                .await;
-
-                if info_dns_records_response.is_ok() {
-                    verbose_print(
-                        format!("Retrieved '{}'", domain.domain_name).as_str(),
-                        verbose,
-                    );
-
-                    let _json_dns_records = serde_json::to_string(
-                        &info_dns_records_response.unwrap().responsedata.unwrap(),
-                    );
-
-                    // TODO: How to display data?
-                } else {
-                    let error_code = info_dns_records_response.unwrap_err();
-                    verbose_print(
-                        format!("Couldn't retrieve '{}'", domain.domain_name).as_str(),
-                        verbose,
-                    );
-                    verbose_print(format!("Error: '{}'", error_code).as_str(), verbose);
-                }
-            }
-            verbose_print("Retrieved DNS records", verbose);
-        }
-        Err(status_code) => {
-            verbose_print("Couldn't connect to netcup API", verbose);
-            verbose_print(format!("Error: '{}'", status_code).as_str(), verbose);
-        }
-    };
+    api_connection.get_dns_records(verbose).await;
 }
 
 fn read_config(config_file: PathBuf) -> Configuration {

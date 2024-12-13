@@ -17,7 +17,7 @@ pub struct Credentials {
     pub apipassword: String,
 }
 
-#[derive(Debug, Deserialize, Serialize)]
+#[derive(Clone, Debug, Deserialize, Serialize)]
 pub struct Domain {
     pub domain_name: String,
     pub dns_records: Option<HashMap<String, DnsRecord>>,

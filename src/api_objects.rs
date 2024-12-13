@@ -151,7 +151,7 @@ pub struct DnsRecordSet {
     pub dnsrecords: Vec<DnsRecord>,
 }
 
-#[derive(Debug, Deserialize, Serialize)]
+#[derive(Clone, Debug, Deserialize, Serialize)]
 pub struct DnsRecord {
     id: Option<String>,
     hostname: String,
@@ -163,7 +163,7 @@ pub struct DnsRecord {
     state: Option<String>,
 }
 
-#[derive(Debug, Deserialize, Serialize)]
+#[derive(Clone, Debug, Deserialize, Serialize)]
 #[allow(nonstandard_style)]
 pub enum RecordType {
     A,
