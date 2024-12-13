@@ -2,6 +2,8 @@ use serde::{Deserialize, Serialize};
 
 use crate::configuration::Credentials;
 
+// =============================
+
 #[derive(Debug, Serialize)]
 pub struct LoginRequestFrame {
     pub action: String,
@@ -44,6 +46,8 @@ pub struct LoginResponseData {
     pub apisessionid: String,
 }
 
+// =============================
+
 #[derive(Debug, Serialize)]
 pub struct InfoDomainRequestFrame {
     pub action: String,
@@ -73,6 +77,38 @@ pub struct InfoDomainResponse {
     pub responsedata: String,
 }
 
+// =============================
+//
+#[derive(Debug, Serialize)]
+pub struct InfoDnsRecordsFrame {
+    pub action: String,
+    pub param: InfoDnsRecordsRequest,
+}
+
+#[derive(Debug, Serialize)]
+pub struct InfoDnsRecordsRequest {
+    pub domainname: String,
+    pub customernumber: i32,
+    pub apikey: String,
+    pub apisessionid: String,
+    pub clientrequestid: Option<String>,
+}
+
+#[derive(Debug, Deserialize)]
+#[allow(dead_code)]
+pub struct InfoDnsRecordsResponse {
+    pub serverrequestid: String,
+    pub clientrequestid: String,
+    pub action: String,
+    pub status: String,
+    pub statuscode: i32,
+    pub shortmessage: String,
+    pub longmessage: String,
+    pub responsedata: Option<DnsRecordsResponseData>,
+}
+
+// =============================
+
 #[derive(Debug, Serialize)]
 pub struct UpdateDnsRecordsRequestFrame {
     pub action: String,
@@ -99,16 +135,18 @@ pub struct UpdateDnsRecordsResponse {
     pub statuscode: i32,
     pub shortmessage: String,
     pub longmessage: Option<String>,
-    pub responsedata: Option<UpdateDnsRecordsResponseData>,
+    pub responsedata: Option<DnsRecordsResponseData>,
 }
 
-#[derive(Debug, Deserialize)]
+// =============================
+
+#[derive(Debug, Deserialize, Serialize)]
 #[allow(dead_code)]
-pub struct UpdateDnsRecordsResponseData {
+pub struct DnsRecordsResponseData {
     pub dnsrecords: Vec<DnsRecord>,
 }
 
-#[derive(Debug, Serialize)]
+#[derive(Debug, Serialize, Deserialize)]
 pub struct DnsRecordSet {
     pub dnsrecords: Vec<DnsRecord>,
 }
@@ -121,7 +159,7 @@ pub struct DnsRecord {
     dns_type: RecordType,
     priority: Option<String>,
     destination: String,
-    delete: Option<bool>,
+    deleterecord: Option<bool>,
     state: Option<String>,
 }
 

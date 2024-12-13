@@ -9,6 +9,7 @@ const SUCCESS_STATUS_CODE: i32 = 2000;
 const LOGIN_ACTION: &str = "login";
 const INFO_DOMAIN_ACTION: &str = "infoDomain";
 const UPDATE_DNS_RECORDS_ACTION: &str = "updateDnsRecords";
+const INFO_DNS_RECORDS_ACTION: &str = "infoDnsRecords";
 
 pub async fn create_login_session(api_login: &Credentials) -> Result<LoginResponse, i32> {
     let login_request = LoginRequestFrame {
@@ -66,6 +67,44 @@ pub async fn get_domain_info(
         .await
         .expect("Couldn't retrieve data from Netcup API.")
         .json::<InfoDomainResponse>()
+        .await
+        .expect("Couldn't parse response of Netcup API.");
+
+    match response.statuscode {
+        SUCCESS_STATUS_CODE => Ok(response),
+        _ => {
+            println!("{:?}", response.longmessage);
+            Err(response.statuscode)
+        }
+    }
+}
+
+pub async fn info_dns_records(
+    session_id: String,
+    domain: String,
+    credentials: &Credentials,
+) -> Result<InfoDnsRecordsResponse, i32> {
+    let info_dns_records_request = InfoDnsRecordsRequest {
+        domainname: domain,
+        customernumber: credentials.customernumber,
+        apikey: credentials.apikey.to_owned(),
+        apisessionid: session_id,
+        clientrequestid: None,
+    };
+
+    let request_frame = InfoDnsRecordsFrame {
+        action: INFO_DNS_RECORDS_ACTION.to_string(),
+        param: info_dns_records_request,
+    };
+
+    let client = reqwest::Client::new();
+    let response = client
+        .post(API_URL)
+        .json(&request_frame)
+        .send()
+        .await
+        .expect("Couldn't retrieve data from Netcup API.")
+        .json::<InfoDnsRecordsResponse>()
         .await
         .expect("Couldn't parse response of Netcup API.");
 
