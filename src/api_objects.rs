@@ -49,6 +49,22 @@ pub struct LoginResponseData {
 // =============================
 
 #[derive(Debug, Serialize)]
+pub struct LogoutRequestFrame {
+    pub action: String,
+    pub param: LogoutRequest,
+}
+
+#[derive(Debug, Serialize)]
+pub struct LogoutRequest {
+    pub customernumber: i32,
+    pub apikey: String,
+    pub apisessionid: String,
+    pub clientrequestid: Option<String>,
+}
+
+// =============================
+
+#[derive(Debug, Serialize)]
 pub struct InfoDomainRequestFrame {
     pub action: String,
     pub param: InfoDomainRequest,

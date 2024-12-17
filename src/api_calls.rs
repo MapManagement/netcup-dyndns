@@ -7,6 +7,7 @@ const API_URL: &str = "https://ccp.netcup.net/run/webservice/servers/endpoint.ph
 const SUCCESS_STATUS_CODE: i32 = 2000;
 
 const LOGIN_ACTION: &str = "login";
+const LOGOUT_ACTION: &str = "logout";
 const INFO_DOMAIN_ACTION: &str = "infoDomain";
 const UPDATE_DNS_RECORDS_ACTION: &str = "updateDnsRecords";
 const INFO_DNS_RECORDS_ACTION: &str = "infoDnsRecords";
@@ -37,6 +38,30 @@ pub async fn create_login_session(api_login: &Credentials) -> Result<LoginRespon
         _ => Err(response.statuscode),
     }
 }
+
+pub async fn destroy_login_session(api_login: &Credentials, session_id: String) {
+    let logout_request = LogoutRequestFrame {
+        action: LOGOUT_ACTION.to_string(),
+        param: LogoutRequest {
+            customernumber: api_login.customernumber,
+            apikey: api_login.apikey.clone(),
+            apisessionid: session_id,
+            clientrequestid: None,
+        },
+    };
+
+    let client = reqwest::Client::new();
+    let response = client
+        .post(API_URL)
+        .json(&logout_request)
+        .send()
+        .await
+        .expect("Couldn't logout of Netcup API.")
+        .json::<LoginResponse>()
+        .await
+        .expect("Couldn't parse response of Netcup API.");
+}
+
 // ==== read information ====
 
 /// Only available for domain resellers
